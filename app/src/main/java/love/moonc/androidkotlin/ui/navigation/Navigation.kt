@@ -11,6 +11,8 @@ object Screen {
     const val DISCOVER = "discover"
     const val PROFILE = "profile"
     const val BOTTLE = "bottle"
+    const val INVITE = "invite"
+    const val SETTINGS = "settings"
 }
 
 data class TabItem(
