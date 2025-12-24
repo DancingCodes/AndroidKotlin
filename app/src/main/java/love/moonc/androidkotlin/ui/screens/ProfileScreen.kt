@@ -30,20 +30,17 @@ fun ProfileScreen() {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. 顶部背景区域 & 头像
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(240.dp),
             contentAlignment = Alignment.Center
         ) {
-            // 这里可以放一个装饰性的背景图或渐变色
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Surface(
                     modifier = Modifier.size(100.dp),
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    shadowElevation = 8.dp
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
@@ -102,7 +99,10 @@ fun ProfileScreen() {
 @Composable
 fun StatItem(label: String, count: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = count, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Text(
+            text = count,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+        )
         Text(text = label, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
     }
 }
@@ -118,7 +118,11 @@ fun ProfileMenuItem(icon: ImageVector, title: String) {
     ) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text = title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge
+        )
         Icon(Icons.Default.Settings, contentDescription = null, tint = Color.LightGray)
     }
 }

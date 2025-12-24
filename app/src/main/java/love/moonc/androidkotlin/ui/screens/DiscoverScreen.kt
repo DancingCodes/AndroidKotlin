@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import love.moonc.androidkotlin.Screen
 
 @Composable
 fun DiscoverScreen(navController: NavController) {
@@ -64,7 +63,6 @@ fun DiscoverScreen(navController: NavController) {
                     contentColor = Color(0xFF1976D2)
                 ) {
                     // 执行跳转：这里跳转到你在 NavHost 里定义的路径名
-                    navController.navigate(Screen.BOTTLE)
                 }
             }
             item {
