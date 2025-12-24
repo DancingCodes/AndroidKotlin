@@ -18,10 +18,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import love.moonc.androidkotlin.ui.navigation.Screen
 
 @Composable
-fun DiscoverScreen(navController: NavController) {
+fun DiscoverScreen(navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -62,7 +63,7 @@ fun DiscoverScreen(navController: NavController) {
                     containerColor = Color(0xFFE3F2FD),
                     contentColor = Color(0xFF1976D2)
                 ) {
-                    // 执行跳转：这里跳转到你在 NavHost 里定义的路径名
+                    navController.navigate(Screen.BOTTLE)
                 }
             }
             item {
