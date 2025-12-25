@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 
 object Screen {
+    const val AUTH = "auth"
     const val HOME = "home"
     const val DISCOVER = "discover"
     const val PROFILE = "profile"
