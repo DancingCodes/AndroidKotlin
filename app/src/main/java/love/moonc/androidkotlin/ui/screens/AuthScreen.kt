@@ -43,7 +43,6 @@ fun AuthScreen(
                 label = { Text("昵称") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -54,7 +53,6 @@ fun AuthScreen(
             label = { Text("账号") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -66,7 +64,6 @@ fun AuthScreen(
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
         )
 
         Spacer(modifier = Modifier.height(24.dp))

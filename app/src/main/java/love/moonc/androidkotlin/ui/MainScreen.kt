@@ -20,10 +20,8 @@ import love.moonc.androidkotlin.ui.navigation.mainTabs
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
-    // 使用 remember 确保不会在重组时重复创建对象
     val userPreferences = remember { UserPreferences(context) }
 
-    // 关键点：将初始值设为 false
     val isLoggedIn by userPreferences.isLoggedIn.collectAsState(initial = false)
 
     val navController = rememberNavController()
@@ -31,7 +29,6 @@ fun MainScreen() {
     val currentRoute = navBackStackEntry?.destination?.route
     val isMainTab = mainTabs.any { it.route == currentRoute }
 
-    // 直接渲染 Scaffold，不再使用 if (isLoggedIn != null)
     Scaffold(
         bottomBar = {
             if (isMainTab) {
@@ -52,7 +49,6 @@ fun MainScreen() {
             navController = navController,
             innerPadding = innerPadding,
             isMainTab = isMainTab,
-            // 这里的 isLoggedIn 会随着 DataStore 读取完成从 false 变为 true（如果已登录）
             startDestination = if (isLoggedIn) Screen.HOME else Screen.AUTH
         )
     }

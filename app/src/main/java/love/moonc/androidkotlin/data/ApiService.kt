@@ -8,9 +8,8 @@ interface ApiService {
     suspend fun register(@Body request: RegisterRequest): BaseResponse<String>
 }
 
-// 对应 ApiFox 的数据模型
 data class RegisterRequest(
-    val username: String,
+    val nickname: String,
     val account: String,
     val password: String
 )

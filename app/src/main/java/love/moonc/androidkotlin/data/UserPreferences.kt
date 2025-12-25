@@ -16,7 +16,6 @@ class UserPreferences(private val context: Context) {
         private val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
     }
 
-
     val isLoggedIn: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[IS_LOGGED_IN] ?: false
     }
