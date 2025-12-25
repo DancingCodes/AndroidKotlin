@@ -21,13 +21,14 @@ import love.moonc.androidkotlin.ui.navigation.mainTabs
 fun MainScreen() {
     val context = LocalContext.current
     val userPreferences = remember { UserPreferences(context) }
-
-    val isLoggedIn by userPreferences.isLoggedIn.collectAsState(initial = false)
-
+    val token by userPreferences.token.collectAsState(initial = null)
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isMainTab = mainTabs.any { it.route == currentRoute }
+    if (token == null) {
+        return
+    }
 
     Scaffold(
         bottomBar = {
@@ -35,11 +36,7 @@ fun MainScreen() {
                 TabBar(
                     currentRoute = currentRoute,
                     onTabSelected = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        navController.navigate(route)
                     }
                 )
             }
@@ -49,7 +46,7 @@ fun MainScreen() {
             navController = navController,
             innerPadding = innerPadding,
             isMainTab = isMainTab,
-            startDestination = if (isLoggedIn) Screen.HOME else Screen.AUTH
+            startDestination = if (token?.isNotEmpty() == true) Screen.HOME else Screen.AUTH
         )
     }
 }

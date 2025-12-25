@@ -10,6 +10,7 @@ import love.moonc.androidkotlin.data.NetworkManager
 import love.moonc.androidkotlin.data.RegisterRequest
 import love.moonc.androidkotlin.data.UserPreferences
 
+
 class AuthViewModel(private val userPreferences: UserPreferences) : ViewModel() {
     var isLoading by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
@@ -20,10 +21,19 @@ class AuthViewModel(private val userPreferences: UserPreferences) : ViewModel() 
             errorMessage = null
             try {
                 val response = NetworkManager.api.register(request)
+
+                // 假设你的 ApiResponse 结构里，data 包含了 token
                 if (response.code == 200) {
-                    userPreferences.saveLoginStatus(true)
-                    onSuccess()
+                    val authData = response.data
+                    if (authData != null) {
+                        userPreferences.saveToken(authData.token)
+                        onSuccess()
+                    } else {
+                        errorMessage = "返回数据为空"
+                    }
                 } else {
+                    // 这里的错误会被拦截器拦截并弹 Toast，
+                    // 但在这里给 errorMessage 赋值可以用于 UI 上的额外提示
                     errorMessage = response.message
                 }
             } catch (e: Exception) {
