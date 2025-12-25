@@ -32,7 +32,7 @@ class UserPreferences(private val context: Context) {
         }
     }
 
-    suspend fun saveUser(user: User) {
+    suspend fun updateUser(user: User) {
         context.dataStore.edit { prefs ->
             prefs[USER_JSON] = gson.toJson(user)
         }

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import love.moonc.androidkotlin.data.LoginRequest
 import love.moonc.androidkotlin.data.UserPreferences
 import love.moonc.androidkotlin.ui.screens.*
 import love.moonc.androidkotlin.data.RegisterRequest
@@ -40,6 +41,12 @@ fun AppNavHost(
                 onAuthClick = { isRegister, nickname, account, password ->
                     if (isRegister) {
                         authViewModel.register(RegisterRequest(nickname, account, password)) {
+                            navController.navigate(Screen.HOME) {
+                                popUpTo(Screen.AUTH) { inclusive = true }
+                            }
+                        }
+                    }else {
+                        authViewModel.login(LoginRequest(account, password)) {
                             navController.navigate(Screen.HOME) {
                                 popUpTo(Screen.AUTH) { inclusive = true }
                             }
