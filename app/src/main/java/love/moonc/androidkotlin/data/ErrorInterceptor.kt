@@ -12,6 +12,7 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import org.json.JSONObject
 
+
 class ErrorInterceptor(private val context: Context) : Interceptor {
 
     // 1. 定义协程作用域 (用于在拦截器里执行 suspend 函数)
@@ -23,28 +24,32 @@ class ErrorInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = chain.proceed(chain.request())
 
+        // ✅ 使用 response.code 而不是 field code
+        val httpCode = response.code()
+
         try {
-            // 复制一份 Body，防止原始流被关闭
             val responseBodyCopy = response.peekBody(Long.MAX_VALUE)
             val bodyString = responseBodyCopy.string()
 
             if (bodyString.isNotEmpty()) {
                 val jsonObject = JSONObject(bodyString)
+                // 业务状态码
                 val businessCode = jsonObject.optInt("code", 200)
 
-                // 统一处理服务器 500 错误提示
-                if (businessCode == 500) {
-                    val msg = jsonObject.optString("msg", "服务器错误")
-                    showToast(msg)
-                }
-
-                // --- 核心修复：处理 401 未授权 ---
-                // 注意：这里同时判断 HTTP 状态码 401 或 JSON 业务码 401
-                if (businessCode == 401) {
+                // --- 核心修复：双重判断 401 ---
+                if (httpCode == 401 || businessCode == 401) {
                     showToast("登录已过期，请重新登录")
                     scope.launch {
                         userPreferences.clear()
+                        // 还可以考虑在这里把 NetworkManager.currentToken 清空
+                        NetworkManager.currentToken = ""
                     }
+                }
+
+                // 处理 500
+                if (httpCode == 500 || businessCode == 500) {
+                    val msg = jsonObject.optString("msg", "服务器内部错误")
+                    showToast(msg)
                 }
             }
         } catch (e: Exception) {
@@ -53,7 +58,6 @@ class ErrorInterceptor(private val context: Context) : Interceptor {
 
         return response
     }
-
     // 辅助函数：在主线程弹出 Toast
     private fun showToast(message: String) {
         Handler(Looper.getMainLooper()).post {

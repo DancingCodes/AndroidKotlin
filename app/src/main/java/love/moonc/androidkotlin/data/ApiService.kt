@@ -12,7 +12,7 @@ interface ApiService {
     suspend fun login(@Body request: LoginRequest): BaseResponse<AuthData>
 
     @GET("/u/profile")
-    suspend fun getProfile(): BaseResponse<User>
+    suspend fun getProfile(): BaseResponse<UserResponse>
 }
 
 data class RegisterRequest(
@@ -31,6 +31,9 @@ data class AuthData(
     val token: String
 )
 
+data class UserResponse(
+    val user: User
+)
 
 data class BaseResponse<T>(
     val code: Int,

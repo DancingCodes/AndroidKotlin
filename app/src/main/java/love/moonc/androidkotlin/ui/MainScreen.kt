@@ -1,5 +1,6 @@
 package love.moonc.androidkotlin.ui
 
+import android.util.Log
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,7 +26,6 @@ fun MainScreen() {
     val context = LocalContext.current
     val userPreferences = remember { UserPreferences(context) }
 
-    // 1. 观察 Token。
     val tokenState by userPreferences.token.collectAsState(initial = null)
 
     val navController = rememberNavController()
@@ -39,8 +39,12 @@ fun MainScreen() {
                 try {
                     val response = NetworkManager.api.getProfile()
                     if (response.code == 200) {
-                        response.data?.let { userPreferences.updateUser(it) }
+                        val userData = response.data
+                        if (userData != null) {
+                            userPreferences.updateUser(userData.user)
+                        }
                     }
+
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
