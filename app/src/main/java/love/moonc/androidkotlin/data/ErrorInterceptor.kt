@@ -24,9 +24,6 @@ class ErrorInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = chain.proceed(chain.request())
 
-        // ✅ 使用 response.code 而不是 field code
-        val httpCode = response.code()
-
         try {
             val responseBodyCopy = response.peekBody(Long.MAX_VALUE)
             val bodyString = responseBodyCopy.string()
@@ -36,8 +33,7 @@ class ErrorInterceptor(private val context: Context) : Interceptor {
                 // 业务状态码
                 val businessCode = jsonObject.optInt("code", 200)
 
-                // --- 核心修复：双重判断 401 ---
-                if (httpCode == 401 || businessCode == 401) {
+                if ( businessCode == 401) {
                     showToast("登录已过期，请重新登录")
                     scope.launch {
                         userPreferences.clear()
@@ -46,8 +42,7 @@ class ErrorInterceptor(private val context: Context) : Interceptor {
                     }
                 }
 
-                // 处理 500
-                if (httpCode == 500 || businessCode == 500) {
+                if (businessCode == 500) {
                     val msg = jsonObject.optString("msg", "服务器内部错误")
                     showToast(msg)
                 }
