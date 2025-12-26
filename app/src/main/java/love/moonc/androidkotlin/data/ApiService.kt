@@ -19,6 +19,7 @@ interface ApiService {
 
 
     @POST("/u/update")
+    suspend fun updateProfile(@Body request: UpdateRequest): BaseResponse<String>
 
 
     @Multipart
@@ -56,4 +57,11 @@ data class BaseResponse<T>(
 
 data class UploadResponse(
     val url: String
+)
+
+data class UpdateRequest(
+    val password: String? = null,
+    val nickname: String? = null,
+    val avatar: String? = null,
+    val signature: String? = null
 )

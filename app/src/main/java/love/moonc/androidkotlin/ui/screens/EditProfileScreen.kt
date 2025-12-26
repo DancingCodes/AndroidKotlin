@@ -53,7 +53,13 @@ fun EditProfileScreen(navController: NavHostController) {
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
 
             EditItem(label = "昵称", value = user?.nickname ?: "") {
-                navController.navigate(Screen.MODIFY_NICKNAME) // 💡 仅仅执行跳转
+                navController.navigate(Screen.MODIFY_NICKNAME)
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+
+            EditItem(label = "个性签名", value = user?.signature ?: "") {
+                navController.navigate(Screen.MODIFY_SIGNATURE)
             }
         }
     }

@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -103,7 +104,7 @@ fun ProfileScreen(navController: NavHostController) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(url)
-                                .crossfade(800) // 💡 800ms 淡入，过渡非常高级
+                                .crossfade(800)
                                 .build(),
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
@@ -129,6 +130,24 @@ fun ProfileScreen(navController: NavHostController) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
+
+                if (!user?.signature.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = user?.signature ?: "",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
 
@@ -185,36 +204,31 @@ fun StatItem(label: String, count: String) {
 }
 
 @Composable
-fun ProfileMenuItem(icon: ImageVector, title: String, onClick: () -> Unit) {
+fun ProfileMenuItem(
+    icon: ImageVector,
+    title: String,
+    titleColor: Color = MaterialTheme.colorScheme.onSurface, // 💡 添加默认颜色
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = titleColor // 💡 图标颜色也可以随文字颜色改变
+        )
         Spacer(modifier = Modifier.width(16.dp))
-
         Text(
             text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
+            color = titleColor // 💡 使用传入的颜色
         )
-
+        Spacer(modifier = Modifier.weight(1f))
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,

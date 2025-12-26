@@ -20,50 +20,39 @@ import love.moonc.androidkotlin.data.UserPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModifyNicknameScreen(navController: NavHostController) {
+fun ModifySignatureScreen(navController: NavHostController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val userPreferences = remember { UserPreferences(context) }
-
-    // 💡 获取当前用户信息
     val user by userPreferences.user.collectAsState(initial = null)
 
-    // 💡 用当前昵称初始化输入框，记得处理 null
-    var nickname by remember(user) { mutableStateOf(user?.nickname ?: "") }
+    // 用当前签名初始化，如果为空则默认为空字符串
+    var signature by remember(user) { mutableStateOf(user?.signature ?: "") }
 
-    // 简单的校验逻辑
-    val isEnabled = nickname.isNotBlank() && nickname != user?.nickname && nickname.length <= 12
+    // 校验逻辑：内容变化了且不超过 50 个字即可保存（签名允许为空）
+    val isEnabled = signature != (user?.signature ?: "") && signature.length <= 50
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("修改昵称") },
+                title = { Text("修改个性签名") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
                 actions = {
-                    // 保存按钮：只有内容发生变化且合法时才亮起
                     TextButton(
                         enabled = isEnabled,
                         onClick = {
                             scope.launch {
                                 val response = NetworkManager.api.updateProfile(
-                                    UpdateRequest(nickname = nickname)
+                                    UpdateRequest(signature = signature)
                                 )
-
                                 if (response.code == 200) {
-                                    user?.let { userPreferences.updateUser(it.copy(nickname = nickname)) }
-                                    Toast.makeText(context, "修改成功", Toast.LENGTH_SHORT)
-                                        .show()
+                                    user?.let { userPreferences.updateUser(it.copy(signature = signature)) }
+                                    Toast.makeText(context, "签名已更新", Toast.LENGTH_SHORT).show()
                                     navController.popBackStack()
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "错误: ${response.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
                                 }
                             }
                         }
@@ -86,31 +75,31 @@ fun ModifyNicknameScreen(navController: NavHostController) {
                 .padding(16.dp)
         ) {
             OutlinedTextField(
-                value = nickname,
-                onValueChange = { if (it.length <= 12) nickname = it }, // 限制输入长度
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("新昵称") },
-                placeholder = { Text("请输入昵称") },
-                singleLine = true,
+                value = signature,
+                onValueChange = { if (it.length <= 50) signature = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 120.dp), // 💡 设置最小高度，看起来像个大输入框
+                label = { Text("个性签名") },
+                placeholder = { Text("介绍一下自己吧...") },
+                singleLine = false, // 💡 允许多行输入
+                maxLines = 5,
                 trailingIcon = {
-                    // 如果有内容，显示一键清除按钮
-                    if (nickname.isNotEmpty()) {
-                        IconButton(onClick = { nickname = "" }) {
+                    if (signature.isNotEmpty()) {
+                        IconButton(onClick = { signature = "" }) {
                             Icon(Icons.Default.Close, contentDescription = "清除")
                         }
                     }
                 },
                 supportingText = {
-                    // 显示当前字数
-                    Text("${nickname.length}/12")
-                },
-                isError = nickname.length > 12
+                    Text("${signature.length}/50")
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "好的昵称可以让朋友们更容易记住你。",
+                text = "有趣的签名可以让你交到更多志同道合的朋友。",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -14,6 +14,9 @@ object Screen {
     const val EDIT_PROFILE = "edit_profile"
     const val MODIFY_AVATAR = "modify_avatar"
     const val MODIFY_NICKNAME = "modify_nickname"
+    const val MODIFY_SIGNATURE = "modify_signature"
+    const val MODIFY_PASSWORD = "modify_password"
+
     const val BOTTLE = "bottle"
     const val INVITE = "invite"
     const val SETTINGS = "settings"
