@@ -14,56 +14,50 @@ import love.moonc.androidkotlin.data.UserPreferences
 class AuthViewModel(private val userPreferences: UserPreferences) : ViewModel() {
     var isLoading by mutableStateOf(false)
 
-    // 💡 新增：用于在界面显示具体的错误信息
-    var errorMessage by mutableStateOf<String?>(null)
-
+    // 💡 注册逻辑
     fun register(request: RegisterRequest, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading = true
-            errorMessage = null // 开始请求前清空错误
-            try {
-                val response = NetworkManager.api.register(request)
-                if (response.code == 200) {
-                    response.data?.token?.let {
-                        userPreferences.saveToken(it)
-                        onSuccess()
-                    }
-                } else {
-                    // 处理业务错误（如：账号已存在）
-                    errorMessage = response.message
+            val response = NetworkManager.api.register(request)
+            if (response.code == 200) {
+                val token = response.data?.token
+                if (token != null) {
+                    // 1. 存 Token
+                    userPreferences.saveToken(token)
+                    // 2. 紧接着获取并保存用户信息，完成后再跳转
+                    fetchAndSaveProfile(onSuccess)
                 }
-            } catch (e: Exception) {
-                // ✅ 关键修复：捕获异常，防止 401/500 导致闪退
-                e.printStackTrace()
-                errorMessage = "注册失败：${e.localizedMessage}"
-            } finally {
+            } else {
                 isLoading = false
             }
         }
     }
 
+    // 💡 登录逻辑
     fun login(request: LoginRequest, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading = true
-            errorMessage = null
-            try {
-                val response = NetworkManager.api.login(request)
-                if (response.code == 200) {
-                    response.data?.token?.let {
-                        userPreferences.saveToken(it)
-                        onSuccess()
-                    }
-                } else {
-                    // 处理业务错误（如：密码错误）
-                    errorMessage = response.message
+            val response = NetworkManager.api.login(request)
+            if (response.code == 200) {
+                val token = response.data?.token
+                if (token != null) {
+                    // 1. 存 Token
+                    userPreferences.saveToken(token)
+                    // 2. 只有用户信息也拿到了，才算真正的“登录成功”
+                    fetchAndSaveProfile(onSuccess)
                 }
-            } catch (e: Exception) {
-                // ✅ 关键修复：捕获异常，防止 401/500 导致闪退
-                e.printStackTrace()
-                errorMessage = "登录出错，请稍后再试"
-            } finally {
+            } else {
                 isLoading = false
             }
+        }
+    }
+
+    // 💡 抽取公共方法：获取资料并存入 DataStore
+    private suspend fun fetchAndSaveProfile(onSuccess: () -> Unit) {
+        val profileResponse = NetworkManager.api.getProfile()
+        if (profileResponse.code == 200 && profileResponse.data != null) {
+            userPreferences.updateUser(profileResponse.data.user)
+            onSuccess()
         }
     }
 }

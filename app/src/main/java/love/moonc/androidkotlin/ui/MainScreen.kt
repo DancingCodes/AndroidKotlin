@@ -1,66 +1,69 @@
 package love.moonc.androidkotlin.ui
 
-import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import love.moonc.androidkotlin.data.NetworkManager
 import love.moonc.androidkotlin.data.UserPreferences
 import love.moonc.androidkotlin.ui.navigation.AppNavHost
 import love.moonc.androidkotlin.ui.navigation.Screen
 import love.moonc.androidkotlin.ui.navigation.mainTabs
 
-
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
     val userPreferences = remember { UserPreferences(context) }
-
     val tokenState by userPreferences.token.collectAsState(initial = null)
-
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isMainTab = mainTabs.any { it.route == currentRoute }
 
-    LaunchedEffect(tokenState) {
-        tokenState?.let { token ->
-            if (token.isNotEmpty()) {
-                try {
-                    val response = NetworkManager.api.getProfile()
-                    if (response.code == 200) {
-                        val userData = response.data
-                        if (userData != null) {
-                            userPreferences.updateUser(userData.user)
-                        }
-                    }
 
-                } catch (e: Exception) {
-                    e.printStackTrace()
+    when (val token = tokenState) {
+        null -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // 1. 转个圈
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 3.dp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // 2. 显示文字
+                    Text(
+                        text = "正在初始化应用...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
                 }
             }
         }
-    }
-
-    // 3. 【核心修复】使用 when 明确分支，彻底消除编译器的 WHEN_CALL 歧义
-    when (val token = tokenState) {
-        null -> {
-            // 状态一：正在从磁盘读取 DataStore，界面保持空白或显示启动图
-            // 不要写 return，直接把这块区域留空或放个 Logo
-        }
 
         else -> {
-            // 状态二：已经读到结果了（无论是空字符串还是具体的 token）
             Scaffold(
                 bottomBar = {
                     if (isMainTab) {
@@ -83,7 +86,6 @@ fun MainScreen() {
                     navController = navController,
                     innerPadding = innerPadding,
                     isMainTab = isMainTab,
-                    // 只要 token 不为空字符串，就视为已登录
                     startDestination = if (token.isNotEmpty()) Screen.HOME else Screen.AUTH
                 )
             }

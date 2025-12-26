@@ -4,10 +4,11 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import love.moonc.androidkotlin.data.NetworkManager
 
 class HomeViewModel : ViewModel() {
     var isRefreshing by mutableStateOf(false)
-    var messageText by mutableStateOf("")
+//    var messageText by mutableStateOf("")
     var isMessageLoading by mutableStateOf(false)
 
     init {
@@ -30,14 +31,14 @@ class HomeViewModel : ViewModel() {
     fun fetchMessage() {
         viewModelScope.launch {
             isMessageLoading = true
-//            try {
-//                val response = NetworkManager.api.getMessage()
+            try {
+                val response = NetworkManager.api.getProfile()
 //                if (response.code == "200") {
 //                    messageText = response.data
 //                }
-//            } finally {
-//                isMessageLoading = false
-//            }
+            } finally {
+                isMessageLoading = false
+            }
         }
     }
 }

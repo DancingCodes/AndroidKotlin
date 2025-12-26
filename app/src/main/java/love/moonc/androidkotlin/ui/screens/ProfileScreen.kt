@@ -1,19 +1,37 @@
 package love.moonc.androidkotlin.ui.screens
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,10 +40,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import love.moonc.androidkotlin.data.UserPreferences
 import love.moonc.androidkotlin.ui.navigation.Screen
 
@@ -46,36 +67,55 @@ fun ProfileScreen(navController: NavHostController) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(260.dp),
+                .height(260.dp)
+                .clickable { navController.navigate(Screen.EDIT_PROFILE) },
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // 3. 真实头像显示
+                val transition = rememberInfiniteTransition(label = "shimmer")
+                val translateAnim by transition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1000f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1200, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    ), label = "shimmer"
+                )
+
+                val shimmerBrush = androidx.compose.ui.graphics.Brush.linearGradient(
+                    colors = listOf(
+                        Color.LightGray.copy(alpha = 0.3f),
+                        Color.White.copy(alpha = 0.4f), // 💡 中间亮一点，流光感更强
+                        Color.LightGray.copy(alpha = 0.3f),
+                    ),
+                    start = androidx.compose.ui.geometry.Offset.Zero,
+                    end = androidx.compose.ui.geometry.Offset(x = translateAnim, y = translateAnim)
+                )
+
                 Surface(
-                    modifier = Modifier.size(100.dp),
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(shimmerBrush, CircleShape),
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    tonalElevation = 4.dp
+                    color = Color.Transparent
                 ) {
-                    if (user?.avatar.isNullOrEmpty()) {
-                        // 如果没有头像 URL，显示默认图标
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "默认头像",
-                            modifier = Modifier.padding(25.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                    user?.avatar?.let { url ->
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(url)
+                                .crossfade(800) // 💡 800ms 淡入，过渡非常高级
+                                .build(),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
-                    } else {
-                        // 如果有头像 URL，这里可以使用 Coil 库加载图片
-                        // AsyncImage(model = user!!.avatar, contentDescription = "用户头像")
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 4. 真实昵称
                 Text(
-                    text = user?.nickname ?: "正在获取...",
+                    text = user?.nickname ?: "",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
@@ -84,16 +124,14 @@ fun ProfileScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 5. 真实账号或签名
                 Text(
-                    text = if (user != null) "账号: ${user?.account}" else "尚未登录",
+                    text = user?.let { "账号: ${it.account}" } ?: "",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
             }
         }
 
-        // --- 统计数据区域 (例如：帖子、粉丝、关注) ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -107,7 +145,6 @@ fun ProfileScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- 功能菜单卡片 ---
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -119,7 +156,7 @@ fun ProfileScreen(navController: NavHostController) {
                 ProfileMenuItem(
                     icon = Icons.Default.Share,
                     title = "邀请好友",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate(Screen.INVITE) }
                 )
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -139,7 +176,10 @@ fun ProfileScreen(navController: NavHostController) {
 @Composable
 fun StatItem(label: String, count: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = count, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+        Text(
+            text = count,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+        )
         Text(text = label, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
     }
 }
@@ -156,10 +196,7 @@ fun ProfileMenuItem(icon: ImageVector, title: String, onClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    CircleShape
-                ),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
