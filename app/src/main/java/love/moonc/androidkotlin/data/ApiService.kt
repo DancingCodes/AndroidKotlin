@@ -17,6 +17,10 @@ interface ApiService {
     @GET("/u/profile")
     suspend fun getProfile(): BaseResponse<UserResponse>
 
+
+    @POST("/u/update")
+
+
     @Multipart
     @POST("/common/upload")
     suspend fun uploadAvatar(

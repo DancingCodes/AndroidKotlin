@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import love.moonc.androidkotlin.data.UserPreferences
 import love.moonc.androidkotlin.ui.navigation.Screen
 
@@ -27,27 +28,33 @@ fun EditProfileScreen(navController: NavHostController) {
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            // 1. 头像行：点击跳转到头像修改详情页
+            // EditProfileScreen.kt 里的头像行
             EditItem(label = "头像", trailing = {
-                Surface(modifier = Modifier.size(40.dp), shape = CircleShape) {
+                // 💡 沿用你主页那个流光背景逻辑，保持视觉统一
+                Surface(
+                    modifier = Modifier.size(40.dp), // 编辑页稍微大一点点
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                ) {
                     AsyncImage(
-                        model = "http://10.0.2.2:8088${user?.avatar}",
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(user?.avatar) // 💡 直接传 avatar，拼接逻辑交给拦截器或 DataStore
+                            .crossfade(true)
+                            .build(),
                         contentDescription = null,
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }) {
-                navController.navigate(Screen.MODIFY_AVATAR) // 💡 仅仅执行跳转
+                navController.navigate(Screen.MODIFY_AVATAR)
             }
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
 
-            // 2. 昵称行：点击跳转到昵称修改页
             EditItem(label = "昵称", value = user?.nickname ?: "") {
                 navController.navigate(Screen.MODIFY_NICKNAME) // 💡 仅仅执行跳转
             }
-
-            // ... 账号行 ...
         }
     }
 }

@@ -6,9 +6,7 @@ plugins {
 
 android {
     namespace = "love.moonc.androidkotlin"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "love.moonc.androidkotlin"
@@ -29,19 +27,25 @@ android {
             )
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "11"
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
+
     buildFeatures {
         compose = true
     }
 }
 
 dependencies {
+    implementation(libs.androidx.material.icons.core)
     implementation(libs.coil.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.navigation.compose)
@@ -57,8 +61,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.animation)
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

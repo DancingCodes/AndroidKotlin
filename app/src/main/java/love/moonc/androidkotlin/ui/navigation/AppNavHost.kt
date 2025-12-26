@@ -20,6 +20,7 @@ import love.moonc.androidkotlin.ui.screens.DiscoverScreen
 import love.moonc.androidkotlin.ui.screens.HomeScreen
 import love.moonc.androidkotlin.ui.screens.InviteScreen
 import love.moonc.androidkotlin.ui.screens.ModifyAvatarScreen
+import love.moonc.androidkotlin.ui.screens.ModifyNicknameScreen
 import love.moonc.androidkotlin.ui.screens.ProfileScreen
 import love.moonc.androidkotlin.ui.screens.SettingsScreen
 
@@ -74,7 +75,7 @@ fun AppNavHost(
         composable(Screen.BOTTLE) { BottleScreen(navController) }
         composable(Screen.EDIT_PROFILE) { EditProfileScreen(navController) }
         composable(Screen.MODIFY_AVATAR) { ModifyAvatarScreen(navController) }
-        composable(Screen.MODIFY_NICKNAME) { /* 你之后写的昵称修改页 */ }
+        composable(Screen.MODIFY_NICKNAME) { ModifyNicknameScreen(navController) }
         composable(Screen.INVITE) { InviteScreen() }
         composable(Screen.SETTINGS) { SettingsScreen() }
     }
