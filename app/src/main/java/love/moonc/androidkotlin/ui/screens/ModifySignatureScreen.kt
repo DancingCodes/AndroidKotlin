@@ -7,29 +7,33 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.launch
-import love.moonc.androidkotlin.data.UpdateUserRequest
 import love.moonc.androidkotlin.data.UserPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModifySignatureScreen(navController: NavHostController) {
+fun ModifySignatureScreen(
+    navController: NavHostController,
+    // 💡 注入已有的 AuthViewModel
+    viewModel: AuthViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val userPreferences = remember { UserPreferences(context) }
     val user by userPreferences.user.collectAsState(initial = null)
 
-    // 用当前签名初始化，如果为空则默认为空字符串
     var signature by remember(user) { mutableStateOf(user?.signature ?: "") }
 
-    // 校验逻辑：内容变化了且不超过 50 个字即可保存（签名允许为空）
-    val isEnabled = signature != (user?.signature ?: "") && signature.length <= 50
+    // 校验逻辑：内容变化且未加载中
+    val isEnabled = signature != (user?.signature ?: "") &&
+            signature.length <= 50 &&
+            !viewModel.isLoading
 
     Scaffold(
         topBar = {
@@ -44,23 +48,26 @@ fun ModifySignatureScreen(navController: NavHostController) {
                     TextButton(
                         enabled = isEnabled,
                         onClick = {
-                            scope.launch {
-                                val response = NetworkManager.api.updateProfile(
-                                    UpdateUserRequest(signature = signature)
-                                )
-                                if (response.code == 200) {
-                                    user?.let { userPreferences.updateUser(it.copy(signature = signature)) }
-                                    Toast.makeText(context, "签名已更新", Toast.LENGTH_SHORT).show()
-                                    navController.popBackStack()
-                                }
+                            // ✅ 调用 ViewModel 的更新签名方法
+                            viewModel.updateSignature(signature) {
+                                Toast.makeText(context, "签名已更新", Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
                             }
                         }
                     ) {
-                        Text(
-                            "保存",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (isEnabled) MaterialTheme.colorScheme.primary else Color.Gray
-                        )
+                        if (viewModel.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Text(
+                                "保存",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (isEnabled) MaterialTheme.colorScheme.primary else Color.Gray
+                            )
+                        }
                     }
                 }
             )
@@ -78,13 +85,14 @@ fun ModifySignatureScreen(navController: NavHostController) {
                 onValueChange = { if (it.length <= 50) signature = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 120.dp), // 💡 设置最小高度，看起来像个大输入框
+                    .heightIn(min = 120.dp),
                 label = { Text("个性签名") },
                 placeholder = { Text("介绍一下自己吧...") },
-                singleLine = false, // 💡 允许多行输入
+                singleLine = false,
                 maxLines = 5,
+                enabled = !viewModel.isLoading, // 加载中禁用输入
                 trailingIcon = {
-                    if (signature.isNotEmpty()) {
+                    if (signature.isNotEmpty() && !viewModel.isLoading) {
                         IconButton(onClick = { signature = "" }) {
                             Icon(Icons.Default.Close, contentDescription = "清除")
                         }

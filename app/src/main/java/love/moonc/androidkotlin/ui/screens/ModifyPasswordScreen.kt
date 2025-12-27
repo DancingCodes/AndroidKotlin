@@ -13,27 +13,27 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import love.moonc.androidkotlin.data.UpdateUserRequest
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModifyPasswordScreen(navController: NavHostController) {
+fun ModifyPasswordScreen(
+    navController: NavHostController,
+    // 💡 注入 AuthViewModel
+    viewModel: AuthViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-
-    // 控制密码可见性
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // 校验逻辑：长度需 >= 6 且 两次输入必须一致
     val isLengthOk = password.length >= 6
     val isMatch = password == confirmPassword && confirmPassword.isNotEmpty()
-    val canSave = isLengthOk && isMatch
+    // 💡 增加 viewModel.isLoading 判断，防止提交中多次点击
+    val canSave = isLengthOk && isMatch && !viewModel.isLoading
 
     Scaffold(
         topBar = {
@@ -67,13 +67,13 @@ fun ModifyPasswordScreen(navController: NavHostController) {
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // --- 新密码输入框 ---
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("新密码") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                enabled = !viewModel.isLoading,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
@@ -85,14 +85,14 @@ fun ModifyPasswordScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- 确认密码输入框 ---
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
                 label = { Text("确认新密码") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation(), // 确认框通常强制隐藏
+                enabled = !viewModel.isLoading,
+                visualTransformation = PasswordVisualTransformation(),
                 isError = confirmPassword.isNotEmpty() && !isMatch,
                 supportingText = {
                     if (confirmPassword.isNotEmpty() && !isMatch) {
@@ -103,24 +103,28 @@ fun ModifyPasswordScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- 提交按钮 ---
             Button(
                 onClick = {
-                    scope.launch {
-                        val response = NetworkManager.api.updateProfile(
-                            UpdateUserRequest(password = password)
-                        )
-                        if (response.code == 200) {
-                            Toast.makeText(context, "密码更新成功", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
-                        }
+                    // ✅ 调用 ViewModel 的更新密码方法
+                    viewModel.updatePassword(password) {
+                        Toast.makeText(context, "密码更新成功", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
                     }
                 },
                 enabled = canSave,
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Text("确认修改")
+                if (viewModel.isLoading) {
+                    // 使用不带 progress 参数的无限旋转进度条，避免过时警告
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("确认修改")
+                }
             }
         }
     }

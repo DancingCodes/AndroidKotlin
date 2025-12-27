@@ -21,6 +21,13 @@ import kotlinx.coroutines.flow.firstOrNull
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    // ✅ 必须增加这个：告诉 Hilt 如何实例化 UserPreferences
+    @Provides
+    @Singleton
+    fun provideUserPreferences(@ApplicationContext context: Context): UserPreferences {
+        return UserPreferences(context)
+    }
+
     @Provides
     @Singleton
     fun provideOkHttpClient(
@@ -30,20 +37,23 @@ object NetworkModule {
         return OkHttpClient.Builder().addInterceptor { chain ->
             val request = chain.request()
 
+            // 1. 同步获取 Token
             val token = runBlocking {
                 userPreferences.token.firstOrNull()
             }
 
-            // 2. 注入 Header
+            // 2. 注入 Header (保持你的逻辑)
             val finalRequest = if (!token.isNullOrBlank()) {
-                request.newBuilder().header("Authorization", "Bearer $token").build()
+                request.newBuilder()
+                    .header("Authorization", "Bearer $token") // 注意 Bearer 后面通常有空格
+                    .build()
             } else {
                 request
             }
 
             val response = chain.proceed(finalRequest)
 
-            // 3. 统一处理响应码 (按照你之前的逻辑)
+            // 3. 统一处理响应码
             when (response.code) {
                 401 -> {
                     showToast(context, "登录已失效，请重新登录")
@@ -52,6 +62,7 @@ object NetworkModule {
                     }
                 }
                 500 -> {
+                    // 如果 message 为空，给个默认提示
                     showToast(context, response.message)
                 }
             }

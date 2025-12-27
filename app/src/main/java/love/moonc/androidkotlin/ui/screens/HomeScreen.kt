@@ -11,11 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    homeViewModel: HomeViewModel = hiltViewModel()
+) {
     PullToRefreshBox(
         isRefreshing = homeViewModel.isRefreshing,
         onRefresh = { homeViewModel.refresh() },
@@ -30,14 +32,11 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
         ) {
             Spacer(modifier = Modifier.height(64.dp))
 
-            // 1. 头部
+            // 3. 头部 - 演示如何从 ViewModel 获取数据
             HeaderSection()
         }
     }
 }
-
-
-
 
 @Composable
 fun HeaderSection(
@@ -45,7 +44,7 @@ fun HeaderSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "你好",
+            text = "你好", // 显示动态名字
             style = MaterialTheme.typography.displaySmall.copy(
                 fontSize = 24.sp
             ),

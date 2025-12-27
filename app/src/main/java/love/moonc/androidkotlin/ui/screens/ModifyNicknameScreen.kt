@@ -7,31 +7,37 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.launch
-import love.moonc.androidkotlin.data.UpdateUserRequest
 import love.moonc.androidkotlin.data.UserPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModifyNicknameScreen(navController: NavHostController) {
+fun ModifyNicknameScreen(
+    navController: NavHostController,
+    // 💡 注入已有的 AuthViewModel
+    viewModel: AuthViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val userPreferences = remember { UserPreferences(context) }
 
-    // 💡 获取当前用户信息
+    // 获取当前用户信息
     val user by userPreferences.user.collectAsState(initial = null)
 
-    // 💡 用当前昵称初始化输入框，记得处理 null
+    // 用当前昵称初始化输入框
     var nickname by remember(user) { mutableStateOf(user?.nickname ?: "") }
 
-    // 简单的校验逻辑
-    val isEnabled = nickname.isNotBlank() && nickname != user?.nickname && nickname.length <= 12
+    // 校验逻辑：内容变化、不为空、长度合法且当前没有正在加载
+    val isEnabled = nickname.isNotBlank() &&
+            nickname != user?.nickname &&
+            nickname.length <= 12 &&
+            !viewModel.isLoading
 
     Scaffold(
         topBar = {
@@ -43,35 +49,29 @@ fun ModifyNicknameScreen(navController: NavHostController) {
                     }
                 },
                 actions = {
-                    // 保存按钮：只有内容发生变化且合法时才亮起
                     TextButton(
                         enabled = isEnabled,
                         onClick = {
-                            scope.launch {
-                                val response = NetworkManager.api.updateProfile(
-                                    UpdateUserRequest(nickname = nickname)
-                                )
-
-                                if (response.code == 200) {
-                                    user?.let { userPreferences.updateUser(it.copy(nickname = nickname)) }
-                                    Toast.makeText(context, "修改成功", Toast.LENGTH_SHORT)
-                                        .show()
-                                    navController.popBackStack()
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "错误: ${response.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                            // ✅ 调用 AuthViewModel 里的 updateNickname 方法
+                            // ✅ 逻辑已经在 ViewModel 里写好了，包括调用 api.updateProfile 和 fetchAndSaveProfile
+                            viewModel.updateNickname(nickname) {
+                                Toast.makeText(context, "修改成功", Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
                             }
                         }
                     ) {
-                        Text(
-                            "保存",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (isEnabled) MaterialTheme.colorScheme.primary else Color.Gray
-                        )
+                        if (viewModel.isLoading) {
+                            CircularProgressIndicator(
+                                progress = { 0.5f }, // 改用 Lambda 形式
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else {
+                            Text(
+                                "保存",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (isEnabled) MaterialTheme.colorScheme.primary else Color.Gray
+                            )
+                        }
                     }
                 }
             )
@@ -86,21 +86,20 @@ fun ModifyNicknameScreen(navController: NavHostController) {
         ) {
             OutlinedTextField(
                 value = nickname,
-                onValueChange = { if (it.length <= 12) nickname = it }, // 限制输入长度
+                onValueChange = { if (it.length <= 12) nickname = it },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("新昵称") },
                 placeholder = { Text("请输入昵称") },
                 singleLine = true,
+                enabled = !viewModel.isLoading,
                 trailingIcon = {
-                    // 如果有内容，显示一键清除按钮
-                    if (nickname.isNotEmpty()) {
+                    if (nickname.isNotEmpty() && !viewModel.isLoading) {
                         IconButton(onClick = { nickname = "" }) {
                             Icon(Icons.Default.Close, contentDescription = "清除")
                         }
                     }
                 },
                 supportingText = {
-                    // 显示当前字数
                     Text("${nickname.length}/12")
                 },
                 isError = nickname.length > 12

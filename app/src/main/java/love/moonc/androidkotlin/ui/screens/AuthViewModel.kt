@@ -88,6 +88,59 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun updateNickname(newName: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                // 构造你接口需要的请求体，假设你的接口定义是 updateProfile(UpdateUserRequest)
+                val response = api.updateProfile(love.moonc.androidkotlin.data.UpdateUserRequest(nickname = newName))
+                if (response.code == 200) {
+                    // 刷新本地用户信息（直接重新拉取一次 Profile 最稳）
+                    fetchAndSaveProfile(onSuccess)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun updatePassword(password: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                // 💡 使用 api.updateProfile 传入新密码
+                val response = api.updateProfile(love.moonc.androidkotlin.data.UpdateUserRequest(password = password))
+                if (response.code == 200) {
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun updateSignature(newSignature: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                // 调用 api.updateProfile 传入新签名
+                val response = api.updateProfile(love.moonc.androidkotlin.data.UpdateUserRequest(signature = newSignature))
+                if (response.code == 200) {
+                    // 修改成功后，刷新本地 Profile 信息
+                    fetchAndSaveProfile(onSuccess)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
     private suspend fun fetchAndSaveProfile(onSuccess: () -> Unit) {
         val profileResponse = api.getProfile()
         if (profileResponse.code == 200 && profileResponse.data != null) {
