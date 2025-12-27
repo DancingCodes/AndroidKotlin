@@ -19,7 +19,6 @@ fun MainScreen() {
     val context = LocalContext.current
     val userPreferences = remember { UserPreferences(context) }
 
-    // 💡 1. 监听 Token 状态
     val tokenState by userPreferences.token.collectAsState(initial = null)
 
     val navController = rememberNavController()

@@ -20,7 +20,7 @@ class UserPreferences(private val context: Context) {
         private val USER_JSON = stringPreferencesKey("user_json")
     }
 
-    val token: Flow<String?> = context.dataStore.data.map { it[TOKEN] ?: "" }
+    val token: Flow<String?> = context.dataStore.data.map { it[TOKEN] }
 
     val user: Flow<User?> = context.dataStore.data.map { prefs ->
         prefs[USER_JSON]?.let { gson.fromJson(it, User::class.java) }
