@@ -14,7 +14,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
-import love.moonc.androidkotlin.data.NetworkManager
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import love.moonc.androidkotlin.data.UpdateUserRequest

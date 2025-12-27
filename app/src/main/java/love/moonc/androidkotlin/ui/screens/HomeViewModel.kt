@@ -4,7 +4,6 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import love.moonc.androidkotlin.data.NetworkManager
 
 class HomeViewModel : ViewModel() {
     var isRefreshing by mutableStateOf(false)

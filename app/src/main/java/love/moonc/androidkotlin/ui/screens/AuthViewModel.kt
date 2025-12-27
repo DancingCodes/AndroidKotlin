@@ -5,15 +5,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import love.moonc.androidkotlin.data.LoginRequest
-import love.moonc.androidkotlin.data.NetworkManager
 import love.moonc.androidkotlin.data.RegisterRequest
 import love.moonc.androidkotlin.data.UserPreferences
+import love.moonc.androidkotlin.network.ApiService
+import javax.inject.Inject
 
-class AuthViewModel(private val userPreferences: UserPreferences) : ViewModel() {
+
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val userPreferences: UserPreferences,
+    private val api: ApiService
+) : ViewModel() {
+
     var isLoading by mutableStateOf(false)
-        private set // 设为私有，防止 UI 误改状态
+        private set
 
     fun performAuth(
         isRegister: Boolean,
@@ -32,11 +40,14 @@ class AuthViewModel(private val userPreferences: UserPreferences) : ViewModel() 
     fun register(request: RegisterRequest, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading = true
-            val response = NetworkManager.api.register(request)
-            if (response.code == 200 && response.data?.token != null) {
-                userPreferences.saveToken(response.data.token)
-                fetchAndSaveProfile(onSuccess)
-            } else {
+            try {
+                // 💡 使用注入进来的 api
+                val response = api.register(request)
+                if (response.code == 200 && response.data?.token != null) {
+                    userPreferences.saveToken(response.data.token)
+                    fetchAndSaveProfile(onSuccess)
+                }
+            } finally {
                 isLoading = false
             }
         }
@@ -45,18 +56,20 @@ class AuthViewModel(private val userPreferences: UserPreferences) : ViewModel() 
     fun login(request: LoginRequest, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading = true
-            val response = NetworkManager.api.login(request)
-            if (response.code == 200 && response.data?.token != null) {
-                userPreferences.saveToken(response.data.token)
-                fetchAndSaveProfile(onSuccess)
-            } else {
+            try {
+                val response = api.login(request)
+                if (response.code == 200 && response.data?.token != null) {
+                    userPreferences.saveToken(response.data.token)
+                    fetchAndSaveProfile(onSuccess)
+                }
+            } finally {
                 isLoading = false
             }
         }
     }
 
     private suspend fun fetchAndSaveProfile(onSuccess: () -> Unit) {
-        val profileResponse = NetworkManager.api.getProfile()
+        val profileResponse = api.getProfile()
         if (profileResponse.code == 200 && profileResponse.data != null) {
             userPreferences.updateUser(profileResponse.data.user)
             onSuccess()

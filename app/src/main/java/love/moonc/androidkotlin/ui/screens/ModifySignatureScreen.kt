@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
-import love.moonc.androidkotlin.data.NetworkManager
 import love.moonc.androidkotlin.data.UpdateUserRequest
 import love.moonc.androidkotlin.data.UserPreferences
 

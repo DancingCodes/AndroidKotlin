@@ -25,7 +25,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import love.moonc.androidkotlin.data.NetworkManager
 import love.moonc.androidkotlin.data.User
 import love.moonc.androidkotlin.data.UserPreferences
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

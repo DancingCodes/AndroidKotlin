@@ -3,7 +3,6 @@ package love.moonc.androidkotlin
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import love.moonc.androidkotlin.data.NetworkManager
 import love.moonc.androidkotlin.ui.MainScreen
 import love.moonc.androidkotlin.ui.theme.AndroidKotlinTheme
 
