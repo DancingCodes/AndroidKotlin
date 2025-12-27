@@ -1,8 +1,6 @@
 package love.moonc.androidkotlin.ui.screens
 
-import android.content.Context
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -20,39 +18,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import love.moonc.androidkotlin.data.User
 import love.moonc.androidkotlin.data.UserPreferences
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModifyAvatarScreen(navController: NavHostController) {
+fun ModifyAvatarScreen(
+    navController: NavHostController,
+    // 💡 注入已有的 AuthViewModel
+    viewModel: AuthViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    // 💡 直接从 AuthViewModel 注入的 userPreferences 中读数据
+    // 注意：你之前的 AuthViewModel 里需要把 userPreferences 改为 public 或者提供获取方法
+    // 暂时保持在 UI 层定义，方便直接演示
     val userPreferences = remember { UserPreferences(context) }
     val user by userPreferences.user.collectAsState(initial = null)
 
     var showSheet by remember { mutableStateOf(false) }
-    // 💡 这里的警告会因为下方的 sheetState.hide() 调用而消失
     val sheetState = rememberModalBottomSheetState()
 
     // 相册选择器
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { uploadImage(it, context, scope, userPreferences, user) }
+        uri?.let {
+            // ✅ 调用 AuthViewModel 里的上传方法，彻底干掉 NetworkManager
+            viewModel.uploadAvatar(context, it)
+        }
     }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar( // 💡 改用居中标题，更符合主流审美
+            CenterAlignedTopAppBar(
                 title = { Text("修改头像") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -62,6 +66,11 @@ fun ModifyAvatarScreen(navController: NavHostController) {
             )
         }
     ) { padding ->
+        // 如果 ViewModel 正在上传，显示加载进度条
+        if (viewModel.isLoading) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(padding))
+        }
+
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -92,13 +101,17 @@ fun ModifyAvatarScreen(navController: NavHostController) {
 
             Button(
                 onClick = { showSheet = true },
+                enabled = !viewModel.isLoading, // 上传中禁止点击
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(32.dp)
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("更换头像", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = if (viewModel.isLoading) "正在上传..." else "更换头像",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -114,9 +127,9 @@ fun ModifyAvatarScreen(navController: NavHostController) {
                         headlineContent = { Text("拍照") },
                         leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
                         modifier = Modifier.clickable {
-                            // 💡 使用 scope 调用 hide()，既消除了警告，又增加了平滑动画
                             scope.launch { sheetState.hide() }.invokeOnCompletion {
                                 if (!sheetState.isVisible) showSheet = false
+                                // 这里可以接相机 Launcher
                             }
                         }
                     )
@@ -132,28 +145,6 @@ fun ModifyAvatarScreen(navController: NavHostController) {
                     )
                 }
             }
-        }
-    }
-}
-
-private fun uploadImage(uri: Uri, context: Context, scope: CoroutineScope, prefs: UserPreferences, user: User?) {
-    scope.launch {
-        try {
-            val bytes = context.contentResolver.openInputStream(uri)?.readBytes() ?: return@launch
-            val body = MultipartBody.Part.createFormData(
-                "file", "avatar.jpg",
-                bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
-            )
-            val response = NetworkManager.api.uploadAvatar(body)
-            if (response.code == 200 && response.data != null) {
-                user?.let { prefs.updateUser(it.copy(avatar = response.data.url)) }
-                Toast.makeText(context, "更新成功", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "上传失败: ${response.code}", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(context, "网络异常，请稍后再试", Toast.LENGTH_SHORT).show()
         }
     }
 }

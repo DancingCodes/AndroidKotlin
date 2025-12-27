@@ -30,7 +30,6 @@ object NetworkModule {
         return OkHttpClient.Builder().addInterceptor { chain ->
             val request = chain.request()
 
-            // 1. 获取 Token
             val token = runBlocking {
                 userPreferences.token.firstOrNull()
             }
@@ -76,7 +75,6 @@ object NetworkModule {
         return retrofit.create(ApiService::class.java)
     }
 
-    // 保持你原来的 Toast 工具函数
     private fun showToast(context: Context, message: String) {
         Handler(Looper.getMainLooper()).post {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()

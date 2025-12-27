@@ -61,7 +61,6 @@ fun MainScreen() {
             navController = navController,
             innerPadding = innerPadding,
             startDestination = if (token == null) Screen.Auth.route else Screen.Home.route,
-            userPreferences = userPreferences
         )
     }
 }

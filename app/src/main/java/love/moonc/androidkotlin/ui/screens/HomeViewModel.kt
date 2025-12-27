@@ -3,12 +3,20 @@ package love.moonc.androidkotlin.ui.screens
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import love.moonc.androidkotlin.network.ApiService // 确保导入了你的接口
+import javax.inject.Inject
 
-class HomeViewModel : ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val api: ApiService
+) : ViewModel() {
+
     var isRefreshing by mutableStateOf(false)
-//    var messageText by mutableStateOf("")
     var isMessageLoading by mutableStateOf(false)
+
+    var userProfile by mutableStateOf<love.moonc.androidkotlin.data.UserProfile?>(null)
 
     init {
         fetchAllData()
@@ -31,10 +39,13 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             isMessageLoading = true
             try {
-                val response = NetworkManager.api.getProfile()
-//                if (response.code == "200") {
-//                    messageText = response.data
-//                }
+                val response = api.getProfile()
+                if (response.code == 200) {
+                    userProfile = response.data
+                }
+            } catch (e: Exception) {
+                // 防止网络断开等物理错误导致崩溃
+                e.printStackTrace()
             } finally {
                 isMessageLoading = false
             }
