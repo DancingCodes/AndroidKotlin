@@ -71,7 +71,7 @@ fun SettingsScreen(navController: NavHostController) {
                         title = "退出登录",
                         titleColor = MaterialTheme.colorScheme.error,
                         onClick = {
-                            navController.navigate(Screen.AUTH) {
+                            navController.navigate(Screen.Auth.route) {
                                 popUpTo(0) { inclusive = true }
                             }
                             scope.launch {

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import love.moonc.androidkotlin.data.NetworkManager
-import love.moonc.androidkotlin.data.UpdateRequest
+import love.moonc.androidkotlin.data.UpdateUserRequest
 import love.moonc.androidkotlin.data.UserPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +47,7 @@ fun ModifySignatureScreen(navController: NavHostController) {
                         onClick = {
                             scope.launch {
                                 val response = NetworkManager.api.updateProfile(
-                                    UpdateRequest(signature = signature)
+                                    UpdateUserRequest(signature = signature)
                                 )
                                 if (response.code == 200) {
                                     user?.let { userPreferences.updateUser(it.copy(signature = signature)) }

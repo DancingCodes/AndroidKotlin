@@ -14,54 +14,13 @@ interface ApiService {
     @POST("login")
     suspend fun login(@Body request: LoginRequest): BaseResponse<AuthData>
 
-    @GET("/u/profile")
-    suspend fun getProfile(): BaseResponse<UserResponse>
+    @GET("u/profile")
+    suspend fun getProfile(): BaseResponse<UserProfile>
 
-
-    @POST("/u/update")
-    suspend fun updateProfile(@Body request: UpdateRequest): BaseResponse<String>
-
+    @POST("u/update")
+    suspend fun updateProfile(@Body request: UpdateUserRequest): BaseResponse<String>
 
     @Multipart
-    @POST("/common/upload")
-    suspend fun uploadAvatar(
-        @Part file: MultipartBody.Part
-    ): BaseResponse<UploadResponse>
+    @POST("common/upload")
+    suspend fun uploadAvatar(@Part file: MultipartBody.Part): BaseResponse<UploadResponse>
 }
-
-data class RegisterRequest(
-    val nickname: String,
-    val account: String,
-    val password: String
-)
-
-data class LoginRequest(
-    val account: String,
-    val password: String
-)
-
-
-data class AuthData(
-    val token: String
-)
-
-data class UserResponse(
-    val user: User
-)
-
-data class BaseResponse<T>(
-    val code: Int,
-    val message: String,
-    val data: T?
-)
-
-data class UploadResponse(
-    val url: String
-)
-
-data class UpdateRequest(
-    val password: String? = null,
-    val nickname: String? = null,
-    val avatar: String? = null,
-    val signature: String? = null
-)

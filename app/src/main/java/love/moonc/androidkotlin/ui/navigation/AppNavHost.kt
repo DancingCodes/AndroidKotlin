@@ -1,21 +1,21 @@
 package love.moonc.androidkotlin.ui.navigation
 
-import love.moonc.androidkotlin.ui.screens.EditProfileScreen
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import love.moonc.androidkotlin.data.LoginRequest
-import love.moonc.androidkotlin.data.RegisterRequest
 import love.moonc.androidkotlin.data.UserPreferences
 import love.moonc.androidkotlin.ui.screens.AuthScreen
 import love.moonc.androidkotlin.ui.screens.AuthViewModel
 import love.moonc.androidkotlin.ui.screens.BottleScreen
 import love.moonc.androidkotlin.ui.screens.DiscoverScreen
+import love.moonc.androidkotlin.ui.screens.EditProfileScreen
 import love.moonc.androidkotlin.ui.screens.HomeScreen
 import love.moonc.androidkotlin.ui.screens.InviteScreen
 import love.moonc.androidkotlin.ui.screens.ModifyAvatarScreen
@@ -30,53 +30,51 @@ fun AppNavHost(
     navController: NavHostController,
     innerPadding: PaddingValues,
     startDestination: String,
-    userPreferences: UserPreferences // 💡 改为外部传入，不要在内部 new
+    userPreferences: UserPreferences
 ) {
-    // 移除这行：val userPreferences = UserPreferences(context)
-
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        // 使用固定的 innerPadding，不要再加 if 判断，Scaffold 会自动处理高度
         modifier = Modifier.padding(innerPadding)
     ) {
-        composable(Screen.AUTH) {
+        composable(Screen.Auth.route) {
             val authViewModel: AuthViewModel = viewModel(
-                initializer = {
-                    AuthViewModel(userPreferences)
-                }
+                factory = AuthViewModelFactory(userPreferences)
             )
 
             AuthScreen(
-                isLoading = authViewModel.isLoading,
-                onAuthClick = { isRegister, nickname, account, password ->
-                    if (isRegister) {
-                        authViewModel.register(RegisterRequest(nickname, account, password)) {
-                            navController.navigate(Screen.HOME) {
-                                popUpTo(0) { inclusive = true } // 💡 注册成功清空所有栈
-                            }
-                        }
-                    } else {
-                        authViewModel.login(LoginRequest(account, password)) {
-                            navController.navigate(Screen.HOME) {
-                                popUpTo(0) { inclusive = true } // 💡 登录成功清空所有栈
-                            }
-                        }
+                viewModel = authViewModel, // 直接传 VM 进去，内部自给自足
+                onAuthSuccess = {
+                    // 导航器只管：成功了就带路，不问中间发生了什么
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
+        composable(Screen.Home.route) { HomeScreen() }
+        composable(Screen.Discover.route) { DiscoverScreen(navController) }
+        composable(Screen.Discover.Bottle.route) { BottleScreen(navController) }
+        composable(Screen.Profile.route) { ProfileScreen(navController) }
+        composable(Screen.Profile.Invite.route) { InviteScreen() }
+        composable(Screen.Profile.Settings.route) {SettingsScreen(navController)}
+        composable(Screen.Profile.Edit.route) { EditProfileScreen(navController) }
+        composable(Screen.Profile.Edit.Avatar.route) { ModifyAvatarScreen(navController) }
+        composable(Screen.Profile.Edit.Nickname.route) { ModifyNicknameScreen(navController) }
+        composable(Screen.Profile.Edit.Signature.route) { ModifySignatureScreen(navController) }
+        composable(Screen.Profile.Edit.Password.route) { ModifyPasswordScreen(navController) }
+    }
+}
 
-        composable(Screen.HOME) { HomeScreen() }
-        composable(Screen.DISCOVER) { DiscoverScreen(navController) }
-        composable(Screen.PROFILE) { ProfileScreen(navController) }
-        composable(Screen.BOTTLE) { BottleScreen(navController) }
-        composable(Screen.EDIT_PROFILE) { EditProfileScreen(navController) }
-        composable(Screen.MODIFY_AVATAR) { ModifyAvatarScreen(navController) }
-        composable(Screen.MODIFY_NICKNAME) { ModifyNicknameScreen(navController) }
-        composable(Screen.MODIFY_SIGNATURE) { ModifySignatureScreen(navController) }
-        composable(Screen.MODIFY_PASSWORD) { ModifyPasswordScreen(navController) }
-        composable(Screen.INVITE) { InviteScreen() }
-        composable(Screen.SETTINGS) { SettingsScreen(navController) }
+/**
+ * ViewModel 工厂，用于向 ViewModel 注入依赖
+ */
+class AuthViewModelFactory(private val prefs: UserPreferences) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+            return AuthViewModel(prefs) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

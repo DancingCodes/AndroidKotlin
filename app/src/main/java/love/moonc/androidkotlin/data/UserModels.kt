@@ -11,3 +11,29 @@ data class User(
     @SerializedName("created_at") val createdAt: String?,
     @SerializedName("updated_at") val updatedAt: String?
 )
+
+data class RegisterRequest(
+    val nickname: String,
+    val account: String,
+    val password: String
+)
+
+data class LoginRequest(
+    val account: String,
+    val password: String
+)
+
+data class AuthData(
+    val token: String
+)
+
+data class UpdateUserRequest(
+    val password: String? = null,
+    val nickname: String? = null,
+    val avatar: String? = null,
+    val signature: String? = null
+)
+
+data class UserProfile(
+    val user: User
+)

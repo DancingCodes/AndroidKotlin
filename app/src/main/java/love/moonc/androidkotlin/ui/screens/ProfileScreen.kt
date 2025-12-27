@@ -69,7 +69,7 @@ fun ProfileScreen(navController: NavHostController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(260.dp)
-                .clickable { navController.navigate(Screen.EDIT_PROFILE) },
+                .clickable { navController.navigate(Screen.Profile.Edit.route) },
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -175,7 +175,7 @@ fun ProfileScreen(navController: NavHostController) {
                 ProfileMenuItem(
                     icon = Icons.Default.Share,
                     title = "邀请好友",
-                    onClick = { navController.navigate(Screen.INVITE) }
+                    onClick = { navController.navigate(Screen.Profile.Invite.route) }
                 )
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -185,7 +185,7 @@ fun ProfileScreen(navController: NavHostController) {
                 ProfileMenuItem(
                     icon = Icons.Default.Settings,
                     title = "系统设置",
-                    onClick = { navController.navigate(Screen.SETTINGS) }
+                    onClick = { navController.navigate(Screen.Profile.Settings.route) }
                 )
             }
         }

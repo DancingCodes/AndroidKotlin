@@ -47,19 +47,19 @@ fun EditProfileScreen(navController: NavHostController) {
                     )
                 }
             }) {
-                navController.navigate(Screen.MODIFY_AVATAR)
+                navController.navigate(Screen.Profile.Edit.Avatar.route)
             }
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
 
             EditItem(label = "昵称", value = user?.nickname ?: "") {
-                navController.navigate(Screen.MODIFY_NICKNAME)
+                navController.navigate(Screen.Profile.Edit.Nickname.route)
             }
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
 
             EditItem(label = "个性签名", value = user?.signature ?: "") {
-                navController.navigate(Screen.MODIFY_SIGNATURE)
+                navController.navigate(Screen.Profile.Edit.Signature.route)
             }
         }
     }

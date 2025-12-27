@@ -1,55 +1,66 @@
 package love.moonc.androidkotlin.data
 
 import android.content.Context
-import kotlinx.coroutines.DelicateCoroutinesApi
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
 object NetworkManager {
     private const val BASE_URL = "http://192.168.110.143:3006/"
-    lateinit var api: ApiService
 
-    // 定义一个变量存 Token，避免每次拦截器都去读磁盘
-    @Volatile
-    var currentToken: String? = ""
+    private lateinit var apiService: ApiService
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun init(context: Context) {
-        val userPreferences = UserPreferences(context)
+        if (::apiService.isInitialized) return
+        apiService = createApi(context.applicationContext)
+    }
 
-        // 1. 异步监听 Token 变化（只要 DataStore 更新，这里会自动同步）
-        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            userPreferences.token.collect {
-                currentToken = it
+    val api: ApiService get() = apiService
+
+    private fun createApi(context: Context): ApiService {
+        val client = OkHttpClient.Builder().addInterceptor { chain ->
+            val request = chain.request()
+
+            val token = runBlocking {
+                UserPreferences(context).token.firstOrNull()
             }
-        }
 
-        val client = OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                val requestBuilder = chain.request().newBuilder()
-
-                val token = runBlocking {
-                    UserPreferences(context).token.firstOrNull()
-                }
-                if (!token.isNullOrBlank()) {
-                    requestBuilder.addHeader("Authorization", "Bearer $token")
-                }
-
-                chain.proceed(requestBuilder.build())
+            val finalRequest = if (!token.isNullOrBlank()) {
+                request.newBuilder().header("Authorization", "Bearer $token").build()
+            } else {
+                request
             }
-            .addInterceptor(ErrorInterceptor(context))
-            .build()
 
-        val retrofit = Retrofit.Builder()
+            val response = chain.proceed(finalRequest)
+
+            // 统一处理响应码
+            when (response.code) {
+                401 -> {
+                    showToast(context, "登录已失效，请重新登录")
+                    runBlocking {
+                        UserPreferences(context).clear()
+                    }
+                }
+                500 -> showToast(context, response.message)
+            }
+            response
+        }.build()
+
+        return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+            .create(ApiService::class.java)
+    }
 
-        api = retrofit.create(ApiService::class.java)
+    private fun showToast(context: Context, message: String) {
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
 }

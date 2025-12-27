@@ -13,46 +13,48 @@ import love.moonc.androidkotlin.data.UserPreferences
 
 class AuthViewModel(private val userPreferences: UserPreferences) : ViewModel() {
     var isLoading by mutableStateOf(false)
+        private set // 设为私有，防止 UI 误改状态
 
-    // 💡 注册逻辑
+    fun performAuth(
+        isRegister: Boolean,
+        nickname: String,
+        account: String,
+        password: String,
+        onSuccess: () -> Unit
+    ) {
+        if (isRegister) {
+            register(RegisterRequest(nickname, account, password), onSuccess)
+        } else {
+            login(LoginRequest(account, password), onSuccess)
+        }
+    }
+
     fun register(request: RegisterRequest, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading = true
             val response = NetworkManager.api.register(request)
-            if (response.code == 200) {
-                val token = response.data?.token
-                if (token != null) {
-                    // 1. 存 Token
-                    userPreferences.saveToken(token)
-                    // 2. 紧接着获取并保存用户信息，完成后再跳转
-                    fetchAndSaveProfile(onSuccess)
-                }
+            if (response.code == 200 && response.data?.token != null) {
+                userPreferences.saveToken(response.data.token)
+                fetchAndSaveProfile(onSuccess)
             } else {
                 isLoading = false
             }
         }
     }
 
-    // 💡 登录逻辑
     fun login(request: LoginRequest, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading = true
             val response = NetworkManager.api.login(request)
-            if (response.code == 200) {
-                val token = response.data?.token
-                if (token != null) {
-                    // 1. 存 Token
-                    userPreferences.saveToken(token)
-                    // 2. 只有用户信息也拿到了，才算真正的“登录成功”
-                    fetchAndSaveProfile(onSuccess)
-                }
+            if (response.code == 200 && response.data?.token != null) {
+                userPreferences.saveToken(response.data.token)
+                fetchAndSaveProfile(onSuccess)
             } else {
                 isLoading = false
             }
         }
     }
 
-    // 💡 抽取公共方法：获取资料并存入 DataStore
     private suspend fun fetchAndSaveProfile(onSuccess: () -> Unit) {
         val profileResponse = NetworkManager.api.getProfile()
         if (profileResponse.code == 200 && profileResponse.data != null) {

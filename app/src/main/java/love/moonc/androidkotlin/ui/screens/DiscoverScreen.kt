@@ -63,7 +63,7 @@ fun DiscoverScreen(navController: NavHostController) {
                     containerColor = Color(0xFFE3F2FD),
                     contentColor = Color(0xFF1976D2)
                 ) {
-                    navController.navigate(Screen.BOTTLE)
+                    navController.navigate(Screen.Discover.Bottle.route)
                 }
             }
             item {

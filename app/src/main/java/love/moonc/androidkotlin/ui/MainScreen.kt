@@ -18,21 +18,27 @@ import love.moonc.androidkotlin.ui.navigation.mainTabs
 fun MainScreen() {
     val context = LocalContext.current
     val userPreferences = remember { UserPreferences(context) }
-
-    val tokenState by userPreferences.token.collectAsState(initial = null)
-
+    val token by userPreferences.token.collectAsState(initial = null)
+    var isInitialized by remember { mutableStateOf(false) }
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val isMainTab = mainTabs.any { it.route == currentRoute }
 
-    // 💡 2. 只有在第一次从磁盘加载数据时显示加载页
-    if (tokenState == null) {
+    val isMainTab = mainTabs.any { it.route == currentRoute }
+    LaunchedEffect(token) {
+        if (isInitialized && token == null) {
+            navController.navigate(Screen.Auth.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+        isInitialized = true
+    }
+
+    if (!isInitialized) {
         LoadingScreen()
         return
     }
 
-    // 💡 3. AppNavHost 常驻，不随 tokenState 变化而销毁重构
     Scaffold(
         bottomBar = {
             if (isMainTab) {
@@ -40,7 +46,6 @@ fun MainScreen() {
                     currentRoute = currentRoute,
                     onTabSelected = { route ->
                         navController.navigate(route) {
-                            // 确保底部栏跳转不会堆积栈
                             popUpTo(navController.graph.startDestinationId) {
                                 saveState = true
                             }
@@ -52,13 +57,10 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        // 获取当前真实的 token 状态（此时一定不是 null）
-        val token = tokenState ?: ""
-
         AppNavHost(
             navController = navController,
             innerPadding = innerPadding,
-            startDestination = if (token.isNotEmpty()) Screen.HOME else Screen.AUTH,
+            startDestination = if (token == null) Screen.Auth.route else Screen.Home.route,
             userPreferences = userPreferences
         )
     }
@@ -73,7 +75,6 @@ private fun LoadingScreen() {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator(
                 modifier = Modifier.size(40.dp),
-                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 3.dp
             )
             Spacer(modifier = Modifier.height(16.dp))

@@ -2,24 +2,41 @@ package love.moonc.androidkotlin.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 
-object Screen {
-    const val AUTH = "auth"
-    const val HOME = "home"
-    const val DISCOVER = "discover"
-    const val PROFILE = "profile"
-    const val EDIT_PROFILE = "edit_profile"
-    const val MODIFY_AVATAR = "modify_avatar"
-    const val MODIFY_NICKNAME = "modify_nickname"
-    const val MODIFY_SIGNATURE = "modify_signature"
-    const val MODIFY_PASSWORD = "modify_password"
+sealed class Screen(val route: String) {
+    // 登录注册
+    object Auth : Screen("auth")
 
-    const val BOTTLE = "bottle"
-    const val INVITE = "invite"
-    const val SETTINGS = "settings"
+    // 首页
+    object Home : Screen("home")
+
+    // 发现
+    object Discover : Screen("discover") {
+        object Bottle : Screen("discover/bottle")
+    }
+
+    // 我的
+    object Profile : Screen("profile") {
+        // 邀请好友
+        object Invite : Screen("profile/invite")
+        // 系统设置
+        object Settings : Screen("profile/settings")
+
+        // 编辑用户
+        object Edit : Screen("profile/edit") {
+            // 编辑用户名
+            object Nickname : Screen("profile/edit/nickname")
+            // 编辑个性签名
+            object Signature : Screen("profile/edit/signature")
+            // 编辑密码
+            object Password : Screen("profile/edit/password")
+            // 编辑头像
+            object Avatar : Screen("profile/edit/avatar")
+        }
+    }
 }
 
 data class TabItem(
@@ -29,7 +46,7 @@ data class TabItem(
 )
 
 val mainTabs = listOf(
-    TabItem("首页", Icons.Default.Home, Screen.HOME),
-    TabItem("发现", Icons.Default.Menu, Screen.DISCOVER),
-    TabItem("我的", Icons.Default.Person, Screen.PROFILE)
+    TabItem("首页", Icons.Default.Home, Screen.Home.route),
+    TabItem("发现", Icons.Default.Search, Screen.Discover.route),
+    TabItem("我的", Icons.Default.Person, Screen.Profile.route)
 )

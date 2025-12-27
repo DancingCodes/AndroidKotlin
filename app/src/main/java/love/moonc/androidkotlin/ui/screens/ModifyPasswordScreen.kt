@@ -15,9 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import love.moonc.androidkotlin.data.NetworkManager
-import love.moonc.androidkotlin.data.UpdateRequest
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import love.moonc.androidkotlin.data.UpdateUserRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +109,7 @@ fun ModifyPasswordScreen(navController: NavHostController) {
                 onClick = {
                     scope.launch {
                         val response = NetworkManager.api.updateProfile(
-                            UpdateRequest(password = password)
+                            UpdateUserRequest(password = password)
                         )
                         if (response.code == 200) {
                             Toast.makeText(context, "密码更新成功", Toast.LENGTH_SHORT).show()

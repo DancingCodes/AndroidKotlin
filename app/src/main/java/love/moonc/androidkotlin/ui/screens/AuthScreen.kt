@@ -14,13 +14,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 @Composable
 fun AuthScreen(
-    isLoading: Boolean,
-    onAuthClick: (Boolean, String, String, String) -> Unit
+    viewModel: AuthViewModel,  // 直接传入 VM
+    onAuthSuccess: () -> Unit  // 成功后的指令
 ) {
     var isRegister by remember { mutableStateOf(false) }
     var nickname by remember { mutableStateOf("") }
     var account by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    // 使用 ViewModel 中的状态
+    val isLoading = viewModel.isLoading
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -34,7 +37,6 @@ fun AuthScreen(
         )
 
         Spacer(modifier = Modifier.height(32.dp))
-
 
         if (isRegister) {
             OutlinedTextField(
@@ -69,12 +71,25 @@ fun AuthScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { onAuthClick(isRegister, nickname, account, password) },
+            // 💡 重点：把业务逻辑封装进 ViewModel 的方法里
+            onClick = {
+                viewModel.performAuth(
+                    isRegister = isRegister,
+                    nickname = nickname,
+                    account = account,
+                    password = password,
+                    onSuccess = onAuthSuccess
+                )
+            },
             modifier = Modifier.fillMaxWidth().height(50.dp),
             enabled = !isLoading && account.isNotEmpty() && password.isNotEmpty()
         ) {
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
             } else {
                 Text(if (isRegister) "立即注册" else "登录", fontSize = 18.sp)
             }

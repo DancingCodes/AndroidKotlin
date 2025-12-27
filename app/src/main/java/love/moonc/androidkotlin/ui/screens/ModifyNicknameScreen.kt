@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import love.moonc.androidkotlin.data.NetworkManager
-import love.moonc.androidkotlin.data.UpdateRequest
+import love.moonc.androidkotlin.data.UpdateUserRequest
 import love.moonc.androidkotlin.data.UserPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +50,7 @@ fun ModifyNicknameScreen(navController: NavHostController) {
                         onClick = {
                             scope.launch {
                                 val response = NetworkManager.api.updateProfile(
-                                    UpdateRequest(nickname = nickname)
+                                    UpdateUserRequest(nickname = nickname)
                                 )
 
                                 if (response.code == 200) {
